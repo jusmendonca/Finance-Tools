@@ -14,33 +14,59 @@ library(rvest)
 
 url <- "https://www.fundamentus.com.br/resultado.php"
 
-# Cria um objeto "dados_html" (list), para a leitura dos dados de "url", feita
-## pela função read_html.
 
-dados_html <- read_html(url)
-
-# Extrai a tabela de dados e passa para o objeto "dados_tabela" (list):
+dados_html <- xml2::read_html(url)
 
 dtable <- html_table(html_nodes(dados_html, "table"), fill=TRUE)
 
-# Seleciona a primeira tabela (dados fundamentalistas):
-
 dfund <- dtable[[1]]
 
-# Converte as colunas para o tipo numérico (somente as colunas de 1 a 10)
+dfund <- as.data.frame(dfund)
 
-dfund$ROIC <- gsub("%", "", dfund$ROIC)
+dfund[] <- lapply(dfund, function(x) gsub("%", "", x))
 
-dfund$`Cresc. Rec.5a` <- gsub("%", "", dfund$`Cresc. Rec.5a`)
+dfund[] <- lapply(dfund, function(x) gsub(",", ".", x))
 
-dfund<- dfund |>
-  mutate_at(vars(11, 16, 18), as.numeric)
+dfund <- dfund %>% 
+  dplyr::mutate(`Liq.2meses` = as.numeric(str_replace_all(`Liq.2meses`, "[,.]", "")/1000000),
+         `Patri.Líq` = as.numeric(str_replace_all(`Patrim.Líq`, "[,.]", "")/1000000))
 
+
+
+
+dfund <- dfund %>% 
+  dplyr::mutate(`Liq.2meses` = as.numeric(str_replace_all(`Liq.2meses`, "[,.]", "")/1000000),
+         `Patri.Líq` = as.numeric(str_replace_all(`Patrim.Líq`, "[,.]", "")/1000000))
+
+
+dfund[, 2:ncol(dfund)] <- sapply(dfund[, 2:ncol(dfund)], function(x) as.numeric(x))
+
+dfund <- dfund[(dfund$ROIC > 0 & dfund$`EV/EBIT` > 0), ]
+
+dfund<- dfund[order(-dfund$`EV/EBIT`, dfund$ROIC),]
 
 dfundfilt <- dfund |>
-select(Papel, 'EV/EBIT', Cotação, ROIC, `Liq.2meses`, `Cresc. Rec.5a`, ) |> 
+select(Papel, 'EV/EBIT', ROIC, Cotação, `Liq.2meses`, `Cresc. Rec.5a`, ) |> 
   filter('EV/EBIT'>0) |> 
   filter(ROIC>0)
+
+dfundfilt$RANKING_EV_EBIT <- rank(dfundfilt$`EV/EBIT`)
+
+dfundfilt$RANKING_ROIC <- rank(-dfundfilt$ROIC)
+
+dfundfilt$Ranking_Magic <- dfundfilt$RANKING_EV_EBIT + dfundfilt$RANKING_ROIC
+
+
+
+Note that by putting a minus sign in front of "dfundfilt$`EV/EBIT`", we are asking the rank() function to rank the values in descending order. This means that the lower the "EV/EBIT" ratio, the higher the rank. 
+
+-------------------------------------------------------------------
+
+dfundfilt <- dfundfilt %>%
+  arrange((`EV/EBIT`), desc(ROIC))
+
+
+This will sort the data first by `EV/EBIT` in descending order and then by `ROIC` in ascending order.
 
 dfundfilt <- dfundfilt |>
   mutate(dfundfilt, EY = rank(-`EV/EBIT`, na.last=TRUE))
