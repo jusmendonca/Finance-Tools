@@ -31,6 +31,9 @@ extrato$valor <- as.double(extrato$valor)
 extrato <- extrato %>%
   filter(descricao != "Saldo Anterior", descricao != "S A L D O")
 
+extrato$categoria <- ifelse(grepl("", extrato$descricao, ignore.case = TRUE), "Outros", extrato$categoria)
+
+
 extrato$categoria <- ifelse(grepl("estaciona", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
 
 extrato$categoria <- ifelse(grepl("mercado", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
@@ -124,6 +127,9 @@ extrato$categoria <- ifelse(grepl("CINCAL", extrato$descricao, ignore.case = TRU
 extrato$categoria <- ifelse(grepl("casashop", extrato$descricao, ignore.case = TRUE), "Casa", extrato$categoria)
 
 extrato$categoria <- ifelse(grepl("cosmeticos", extrato$descricao, ignore.case = TRUE), "Cuidados Pessoais", extrato$categoria)
+
+## extrato <- extrato %>%
+  ## mutate(descricao = ifelse(descricao == " ", "outros", descricao))
 
 extrato <- mutate(extrato, conta = "cartao_dinners")
 
