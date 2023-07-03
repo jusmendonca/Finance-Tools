@@ -1,43 +1,62 @@
-# Ler arquivo CSV e criar um data frame
-library(readxl)
-library(writexl)
-library(dplyr)
-library(lubridate)
-library(stringr)
-library(tidyverse)
-library(ggplot2)
+#' Title
+#' Organiza extrato do BB em csv e gera planilha xlxs
+#' @param origem 
+#'
+#' @return planilha xlsx
 
-?separate()
+organizar_extrato_csv <- function(origem){
 
-path <- "data-raw/extrato.csv"
+origem <- "data-raw/extrato.csv"
 
-extrato <- read.csv2(path,header=TRUE, fill=TRUE, fileEncoding="latin1", sep=",")
+extrato <- read.csv2(origem,
+                     header=TRUE, 
+                     fill=TRUE, 
+                     fileEncoding="latin1", 
+                     sep=","
+                     )
 
-extrato <- extrato %>%
-  separate(
+extrato <- extrato |>
+  tidyr::separate(
     col = Data..Dependencia.Origem...Histórico...Data.do.Balancete...Número.do.documento...Valor..,
     into = c("ID", "Data", "Dependencia", "Origem", "Histórico", "Data.do.Balancete", "Número.do.documento", "Valor"),
     sep = ","
-  )
+          )
 extrato <- extrato |> 
-  rename(data = "ID", 
+  dplyr::rename(data = "ID", 
          descricao = "Dependencia",  
          valor = "Data.do.Balancete",
-         categoria = "Origem")
+         categoria = "Origem"
+         )
 
-extrato <- select(extrato, 1, 3, 4, 6)
+extrato <- dplyr::select(extrato, 1, 3, 4, 6)
 
-extrato <- extrato %>%
-  mutate_all(~ gsub('"', '', .))
-
-#extrato <- extrato %>%
-  # filter(descricao != "Saldo Anterior", descricao != "S A L D O")
+extrato <- extrato |> 
+  dplyr::mutate_all(~ gsub('"', '', .))
 
 extrato$data <- as.Date(extrato$data, format = "%d/%m")
 
 extrato$valor <- as.double(extrato$valor)
 
-extrato$categoria <- ifelse(grepl("", extrato$descricao, ignore.case = TRUE), "Outros", extrato$categoria)
+extrato <- dplyr::mutate(extrato, 
+                         conta = "BB", 
+                         .before ="data"
+)
+
+extrato <- dplyr::mutate(extrato,
+                         centro = "Sem classe",
+                         .after = "categoria"
+                         )
+
+extrato <- dplyr::mutate(extrato,
+                         IRPF = "Sem Classe",
+                         .after = "centro"
+)
+
+extrato$categoria <- ifelse(grepl(" ", extrato$descricao, ignore.case = TRUE), "Sem Classe", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Saldo Anterior", extrato$descricao, ignore.case = TRUE), "SALDO INICIAL", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Pix - Recebido", extrato$descricao, ignore.case = TRUE), "Receitas", extrato$categoria)
 
 extrato$categoria <- ifelse(grepl("estaciona", extrato$descricao, ignore.case = TRUE), "Transporte", extrato$categoria)
 
@@ -133,41 +152,50 @@ extrato$categoria <- ifelse(grepl("casashop", extrato$descricao, ignore.case = T
 
 extrato$categoria <- ifelse(grepl("cosmeticos", extrato$descricao, ignore.case = TRUE), "Cuidados Pessoais", extrato$categoria)
 
-extrato <- mutate(extrato, conta = "conta_corrente_BB")
+extrato$categoria <- ifelse(grepl("restituicao de IRPF", extrato$descricao, ignore.case = TRUE), "Restituição IRPF", extrato$categoria)
 
-extrato <- select(extrato, conta, everything())
+extrato$categoria <- ifelse(grepl("in glow", extrato$descricao, ignore.case = TRUE), "Roupas", extrato$categoria)
 
-receitas <- extrato %>%
-  filter(valor > 0)
+extrato$categoria <- ifelse(grepl("macroserv", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
 
-# Resumir os valores da coluna 'valor' por categoria
-resumo_receitas <- aggregate(valor ~ categoria, data = receitas, FUN = sum)
+extrato$categoria <- ifelse(grepl("Maria Jose Moreira Chaves", extrato$descricao, ignore.case = TRUE), "Casa", extrato$categoria)
 
-# Criar o gráfico de pizza
-grafico_receitas <- ggplot(resumo_receitas, aes(x = "", y = valor, fill = categoria)) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  labs(fill = "Categoria", x = NULL, y = NULL) +
-  theme_minimal() +
-  theme(legend.position = "right") +
-  geom_text(aes(label = paste0(round((valor / sum(valor)) * 100), "%")), position = position_stack(vjust = 0.5), color = "white")
+extrato$categoria <- ifelse(grepl("Patricia Cardoso E Silva", extrato$descricao, ignore.case = TRUE), "Casa", extrato$categoria)
 
-print(grafico_receitas)
+extrato$categoria <- ifelse(grepl("Edmilson Pereira Dos Santo", extrato$descricao, ignore.case = TRUE), "Casa", extrato$categoria)
 
-despesas <- extrato %>%
-  filter(valor < 0)
+extrato$categoria <- ifelse(grepl("RFB - PAGAMENTO DARF", extrato$descricao, ignore.case = TRUE), "Impostos e Taxas", extrato$categoria)
 
-resumo_despesas <- aggregate(valor ~ categoria, data = despesas, FUN = sum)
+extrato$categoria <- ifelse(grepl("Rozemeire Novais Santos", extrato$descricao, ignore.case = TRUE), "Serviços Domésticos", extrato$categoria)
 
-grafico_despesas <- ggplot(resumo_despesas, aes(x = "", y = valor, fill = categoria)) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  labs(fill = "Categoria", x = NULL, y = NULL) +
-  theme_minimal() +
-  theme(legend.position = "right") +
-  geom_text(aes(label = paste0(round((valor / sum(valor)) * 100), "%")), position_fill(vjust = 0.5), color = "white")
+extrato$categoria <- ifelse(grepl("Marcelo Junho Chiarini", extrato$descricao, ignore.case = TRUE), "Dentista", extrato$categoria)
 
-print(grafico_despesas)
-  
-write_xlsx(extrato, path = file.choose())
-  
+extrato$categoria <- ifelse(grepl("Elvarlinda Da Rocha Jardim", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Tamyris Prado Galvao", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Ronilda Albuquerque Da Sil", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Luizete De Souza Alves", extrato$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("Compra de Ações", extrato$descricao, ignore.case = TRUE), "Investimentos", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("HOSPITAL MATER DEI", extrato$descricao, ignore.case = TRUE), "Transporte", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("DON ANA", extrato$descricao, ignore.case = TRUE), "Restaurantes e Lanches", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("ANAFE", extrato$descricao, ignore.case = TRUE), "Saúde", extrato$categoria)
+
+extrato$categoria <- ifelse(grepl("S A L D O", extrato$descricao, ignore.case = TRUE), "SALDO FINAL", extrato$categoria)
+
+extrato <- dplyr::select(extrato, 
+                  conta, 
+                  everything()
+                  )
+
+extrato <- dplyr::filter(extrato, 
+                         extrato$valor < 0)
+
+writexl::write_xlsx(extrato, "data/extratoBB.xlsx")
+
+}
