@@ -19,8 +19,9 @@ fatura$data <- sub("(\\d{2})(\\d{2})", "\\1/\\2", fatura$data)
 fatura$data <- as.Date(fatura$data, format = "%d/%m")
 fatura$descricao <- paste(mes, fatura$descricao, sep = " ")
 
-
 fatura$categoria <- ifelse(grepl(" ", fatura$descricao, ignore.case = TRUE), "Sem Classe", fatura$categoria)
+
+fatura$categoria <- ifelse(grepl("IgorDavid", fatura$descricao, ignore.case = TRUE), "Supermercado Salvador", fatura$categoria)
 
 fatura$categoria <- ifelse(grepl("COMPANHIA BRASILEIRA D", fatura$descricao, ignore.case = TRUE), "Educação", fatura$categoria)
 
@@ -48,8 +49,6 @@ fatura$categoria <- ifelse(grepl("centauro", fatura$descricao, ignore.case = TRU
 
 fatura$categoria <- ifelse(grepl("confraria do franca", fatura$descricao, ignore.case = TRUE), "Restaurantes e Lanches", fatura$categoria)
 
-fatura$categoria <- ifelse(grepl("confraria do franca", fatura$descricao, ignore.case = TRUE), "Restaurantes e Lanches", fatura$categoria)
-
 fatura$categoria <- ifelse(grepl("netflix", fatura$descricao, ignore.case = TRUE), "Assinaturas", fatura$categoria)
 
 fatura$categoria <- ifelse(grepl("Produtos Globo", fatura$descricao, ignore.case = TRUE), "Assinaturas", fatura$categoria)
@@ -61,8 +60,6 @@ fatura$categoria <- ifelse(grepl("padaria", fatura$descricao, ignore.case = TRUE
 fatura$categoria <- ifelse(grepl("farmacia", fatura$descricao, ignore.case = TRUE), "Remédios", fatura$categoria)
 
 fatura$categoria <- ifelse(grepl("cencosud", fatura$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", fatura$categoria)
-
-fatura$categoria <- ifelse(grepl("riachuelo", fatura$descricao, ignore.case = TRUE), "Roupas", fatura$categoria)
 
 fatura$categoria <- ifelse(grepl("riachuelo", fatura$descricao, ignore.case = TRUE), "Roupas", fatura$categoria)
 
@@ -78,6 +75,7 @@ fatura$categoria <- ifelse(grepl("bburguer", fatura$descricao, ignore.case = TRU
 
 fatura$categoria <- ifelse(grepl("filial", fatura$descricao, ignore.case = TRUE), "Supermercado, Padaria e Feira", fatura$categoria)
 
+fatura$categoria <- ifelse(grepl("HOSPITAL MATER DEI", fatura$descricao, ignore.case = TRUE), "Transporte", fatura$categoria)
 
 fatura$categoria <- ifelse(grepl("uber", fatura$descricao, ignore.case = TRUE), "Táxi/Uber", fatura$categoria)
 fatura$categoria <- ifelse(grepl("99", fatura$descricao, ignore.case = TRUE), "Táxi/Uber", fatura$categoria)
