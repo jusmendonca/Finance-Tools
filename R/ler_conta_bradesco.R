@@ -1,52 +1,55 @@
-#' Organiza despesas do extrato Banco do Brasil em .csv e gera planilha .xlsx.
+
+#' Lê despesas do extrato Bradesco em .xls e retorna tibble
 #'
 #' @param origem 
-#' @param ano_mes 
 #'
-#' @return
-#' @export .xls
+#' @return tibble
+#' @export 
 #'
 #' @examples
-organizar_extrato_despesas_csv <- function(origem, ano_mes){
+ler_conta_bradesco <- function(origem){
 
-extrato <- read.csv2(origem,
-                     header=TRUE, 
-                     fill=TRUE, 
-                     fileEncoding="latin1", 
-                     sep=","
-                     )
+extrato <- readxl::read_xls(origem)
+
+extrato <- extrato |> 
+  dplyr::rename(data = "...1",
+         descricao = "...2", 
+         categoria = "Bradesco Internet Banking",  
+         valor = "...5")
+
+extrato <- dplyr::select(extrato, 1, 2, 3, 5)
 
 extrato <- extrato |>
-  tidyr::separate(
-    col = Data..Dependencia.Origem...Histórico...Data.do.Balancete...Número.do.documento...Valor..,
-    into = c("ID", "Data", "Dependencia", "Origem", "Histórico", "Data.do.Balancete", "Número.do.documento", "Valor"),
-    sep = ","
-          )
-extrato <- extrato |> 
-  dplyr::rename(data = "ID", 
-         descricao = "Dependencia",  
-         valor = "Data.do.Balancete",
-         categoria = "Origem"
-         )
+  dplyr::slice(1:(which(extrato$descricao == "Total")[1] - 1))
 
-extrato <- dplyr::select(extrato, 1, 3, 4, 6)
+extrato <- extrato[!is.na(extrato$valor),] # Filtra linhas em que "data" não é "NA"
 
-extrato <- extrato |> 
-  dplyr::mutate_all(~ gsub('"', '', .))
+extrato$valor <- as.numeric(gsub(",", ".", gsub("\\.", "", extrato$valor)))
+
+extrato <- dplyr::filter(extrato, 
+                         extrato$valor < 0)
+
+extrato <- dplyr::filter(extrato, 
+                         extrato$descricao != "Gasto c Credito")
+
+extrato <- dplyr::filter(extrato, 
+                         extrato$descricao != "Transfe Pix")
+
+extrato$data <- as.character(extrato$data)
+
+extrato$data <- sub("(\\d{2})(\\d{2})", "\\1/\\2", extrato$data)
 
 extrato$data <- as.Date(extrato$data, format = "%d/%m")
 
-extrato$valor <- as.double(extrato$valor)
-
 extrato <- dplyr::mutate(extrato, 
-                         conta = "BB", 
+                         conta = "Bradesco", 
                          .before ="data"
 )
 
 extrato <- dplyr::mutate(extrato,
-                         centro = "Sem classe",
+                         centro = "Sem Classe",
                          .after = "categoria"
-                         )
+)
 
 extrato <- dplyr::mutate(extrato,
                          IRPF = "NÃO",
@@ -57,20 +60,8 @@ extrato <- dplyr::mutate(extrato,
                          etiqueta = "Sem Classe",
                          .after = "IRPF"
 )
-
-extrato <- dplyr::filter(extrato, 
-                         extrato$descricao != "Saldo Anterior")
-
-extrato <- dplyr::filter(extrato, 
-                         extrato$descricao != "S A L D O")
-
-extrato <- dplyr::filter(extrato, 
-                         extrato$valor < 0)
-
-extrato <- extrato |>
-  dplyr::mutate(valor = valor * -1)
-
-extrato$categoria <- ifelse(grepl(" ", extrato$descricao, ignore.case = TRUE), "Sem Classe", extrato$categoria)
+extrato$categoria <- "Sem Classe"
+extrato$categoria <- ifelse(grepl("prest fin", extrato$descricao, ignore.case = TRUE), "Prestação Casa", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estaciona", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estac m", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
 extrato$categoria <- ifelse(grepl("HOSPITAL MATER DEI", extrato$descricao, ignore.case = TRUE), "Transporte", extrato$categoria)
@@ -78,8 +69,8 @@ extrato$categoria <- ifelse(grepl("COMPANHIA BRASILEIRA D", extrato$descricao, i
 extrato$categoria <- ifelse(grepl("Igor Mendonca", extrato$descricao, ignore.case = TRUE), "Transferências entre Contas", extrato$categoria)
 extrato$categoria <- ifelse(grepl("Fernanda de Q", extrato$descricao, ignore.case = TRUE), "Transferências entre Contas", extrato$categoria)
 extrato$categoria <- ifelse(grepl("barbearia", extrato$descricao, ignore.case = TRUE), "Barbeiro", extrato$categoria)
-extrato$categoria <- ifelse(grepl("cabelo", extrato$descricao, ignore.case = TRUE), "Cabelereiro", extrato$categoria)
 extrato$categoria <- ifelse(grepl("amazon", extrato$descricao, ignore.case = TRUE), "Supermercado", extrato$categoria)
+extrato$categoria <- ifelse(grepl("cabelo", extrato$descricao, ignore.case = TRUE), "Cabelereiro", extrato$categoria)
 extrato$categoria <- ifelse(grepl("mercado", extrato$descricao, ignore.case = TRUE), "Supermercado", extrato$categoria)
 extrato$categoria <- ifelse(grepl("danoli", extrato$descricao, ignore.case = TRUE), "Supermercado", extrato$categoria)
 extrato$categoria <- ifelse(grepl("gbarbosa", extrato$descricao, ignore.case = TRUE), "Supermercado", extrato$categoria)
@@ -199,7 +190,6 @@ extrato$categoria <- ifelse(grepl("posto", extrato$descricao, ignore.case = TRUE
 extrato$categoria <- ifelse(grepl("cinema", extrato$descricao, ignore.case = TRUE), "Cinema", extrato$categoria)
 extrato$categoria <- ifelse(grepl("NEY SOM", extrato$descricao, ignore.case = TRUE), "Instrumentos Musicais", extrato$categoria)
 
-
 extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustível", "Manutenção Carro", "Lavagem", "Licenciamento Anual", "Seguro"),
                          "Carro",
                          ifelse(extrato$categoria %in% c("Padaria", "Feira", "Supermercado", "Gás", "Energia Elétrica", "Água", "Internet", "Assinaturas"),
@@ -236,10 +226,14 @@ extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustíve
                                                                                                                                          "Bens duráveis",
                                                                                                                                          ifelse(extrato$categoria %in% c("Transferências entre contas"),
                                                                                                                                                 "Transferências sem implicação nas despesas",
-                                                                                                                                                ifelse(extrato$categoria %in% c("Pagamento de Empréstimos"),
+                                                                                                                                                ifelse(extrato$categoria %in% c("Prestação Casa", "Pagamento de Empréstimos"),
                                                                                                                                                        "Amortizações",
-                                                                                                                                                        extrato$centro
+                                                                                                                                                       ifelse(extrato$categoria %in% c("Táxi/Uber"),
+                                                                                                                                                              "Transporte",
+                                                                                                                                                              extrato$centro
+                                                                                                                                                       )
                                                                                                                                                 )
+
                                                                                                                                          )        
                                                                                                                                   )
                                                                                                                            )
@@ -259,17 +253,9 @@ extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustíve
                          )
 )
 
-extrato$IRPF <- ifelse(extrato$categoria %in% c("Fisioterapeutas", "Consultas Médicas", "Exames", "Psicólogos", "Plano de Saúde", "Dentistas", "Previdência Privada", "Doutorado Fernanda", "Escola Amélie", "Imposto de Renda", "Investimentos"), "SIM", extrato$IRPF)
+extrato$IRPF <- ifelse(extrato$categoria %in% c("Fisioterapeutas", "Consultas Médicas", "Exames", "Psicólogos", "Plano de Saúde", "Dentistas", "Previdência Privada", "Doutorado Fernanda", "Escola Amélie", "Imposto de Renda", "Investimentos", "Prestação Casa"), "SIM", extrato$IRPF)
 
-extrato <- dplyr::select(extrato, 
-                  conta, 
-                  everything()
-                  )
-
-nome_arquivo <- paste0(ano_mes, ".despesas.BB.xlsx")
-
-caminho_arquivo <- file.path("data", nome_arquivo)
-
-writexl::write_xlsx(extrato, caminho_arquivo)
+df <- tibble::as_tibble(extrato)
 
 }
+

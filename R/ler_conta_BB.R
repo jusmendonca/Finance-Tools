@@ -1,13 +1,12 @@
-#' Organiza despesas do extrato Banco do Brasil em .csv e gera planilha .xlsx.
+#' Lê extrato .csv Banco do Brasil e transforma e dataframe
 #'
-#' @param origem 
-#' @param ano_mes 
+#' @param origem
 #'
 #' @return
-#' @export .xls
+#' @export 
 #'
 #' @examples
-organizar_extrato_despesas_csv <- function(origem, ano_mes){
+ler_conta_BB <- function(origem){
 
 extrato <- read.csv2(origem,
                      header=TRUE, 
@@ -16,23 +15,14 @@ extrato <- read.csv2(origem,
                      sep=","
                      )
 
-extrato <- extrato |>
-  tidyr::separate(
-    col = Data..Dependencia.Origem...Histórico...Data.do.Balancete...Número.do.documento...Valor..,
-    into = c("ID", "Data", "Dependencia", "Origem", "Histórico", "Data.do.Balancete", "Número.do.documento", "Valor"),
-    sep = ","
-          )
 extrato <- extrato |> 
-  dplyr::rename(data = "ID", 
-         descricao = "Dependencia",  
-         valor = "Data.do.Balancete",
-         categoria = "Origem"
+  dplyr::rename(data = "Data", 
+         descricao = "Histórico",
+         categoria = "Data.do.Balancete",
+         valor = "Valor"
          )
 
 extrato <- dplyr::select(extrato, 1, 3, 4, 6)
-
-extrato <- extrato |> 
-  dplyr::mutate_all(~ gsub('"', '', .))
 
 extrato$data <- as.Date(extrato$data, format = "%d/%m")
 
@@ -266,10 +256,6 @@ extrato <- dplyr::select(extrato,
                   everything()
                   )
 
-nome_arquivo <- paste0(ano_mes, ".despesas.BB.xlsx")
-
-caminho_arquivo <- file.path("data", nome_arquivo)
-
-writexl::write_xlsx(extrato, caminho_arquivo)
+df <- tibble::as_tibble(extrato)
 
 }
