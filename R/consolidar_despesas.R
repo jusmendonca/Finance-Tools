@@ -1,23 +1,18 @@
 
 #' Title
-#' Consolida dataframes e exporta uma planilha
-#' @param caminho_arquivo 
-#' @param ano_mes 
+#' Consolida dataframes
+#' @param 
 #' @param ... 
 #'
-#' @return
-#' @export .xlsx
+#' @return tibble
+#' @export 
 #'
 #' @examples
-consolidar_despesas <- function(caminho_arquivo, ano_mes, ...){
+consolidar_despesas <- function(...){
   
-  despesas <- dplyr::bind_rows(...)
+  df <- dplyr::bind_rows(list(...))
   
-  nome_arquivo <- paste0(ano_mes, ".despesas-consolidadas.xlsx")
-  
-  writexl::write_xlsx(despesas, caminho_arquivo)
-  
+  df <- tibble::as_tibble(df)
+
 }
-
-
 

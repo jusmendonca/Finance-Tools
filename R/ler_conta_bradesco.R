@@ -28,6 +28,9 @@ extrato$valor <- as.numeric(gsub(",", ".", gsub("\\.", "", extrato$valor)))
 extrato <- dplyr::filter(extrato, 
                          extrato$valor < 0)
 
+extrato <- extrato |>
+  dplyr::mutate(valor = valor*-1)
+
 extrato <- dplyr::filter(extrato, 
                          extrato$descricao != "Gasto c Credito")
 
