@@ -1,10 +1,13 @@
-#' Title
-#' Organiza extrato do BB em csv e gera planilha xlxs
-#' @param origem ano_mes
+#' Organiza despesas do extrato Banco do Brasil em .csv e gera planilha .xlsx.
 #'
-#' @return planilha xlsx
-
-organizar_extrato_csv <- function(origem, ano_mes){
+#' @param origem 
+#' @param ano_mes 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+organizar_extrato_despesas_csv <- function(origem, ano_mes){
 
 extrato <- read.csv2(origem,
                      header=TRUE, 
@@ -263,7 +266,7 @@ extrato <- dplyr::select(extrato,
                   everything()
                   )
 
-nome_arquivo <- paste0(ano_mes, ".extratoBB.xlsx")
+nome_arquivo <- paste0(ano_mes, ".despesas.BB.xlsx")
 
 caminho_arquivo <- file.path("data", nome_arquivo)
 

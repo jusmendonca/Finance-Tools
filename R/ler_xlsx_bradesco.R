@@ -1,15 +1,10 @@
-# Este código reformata extrato do Cartão Bradesco para importação
-# no Organizze
 
-library(readxl)
-library(writexl)
-library(dplyr)
-library(lubridate)
-library(stringr)
+organizar_fatura_despesas_xls <- function(origem, ano_mes){
 
-extrato <- read_xls(file.choose())
+origem <- file.choose()
 
-mes <- readline(prompt = "Qual é o mês do extrato? ") # cria um objeto 'mes' com a resposta do usuário.
+ano_mes <- "2023-06"
+extrato <- readxl::read_xls(origem)
 
 extrato <- extrato |> 
   dplyr::rename(data = "...1",
@@ -17,7 +12,7 @@ extrato <- extrato |>
          categoria = "Bradesco Internet Banking",  
          valor = "...5")
 
-extrato <- select(extrato, 1, 2, 3, 5)
+extrato <- dplyr::select(extrato, 1, 2, 3, 5)
 
 extrato$data <- as.character(extrato$data)
 
@@ -25,7 +20,7 @@ extrato$data <- sub("(\\d{2})(\\d{2})", "\\1/\\2", extrato$data)
 
 extrato$data <- as.Date(extrato$data, format = "%d/%m")
 
-extrato$descricao <- paste(mes, extrato$descricao, sep = " ")
+extrato <- extrato[!is.na(extrato$data),] # Filtra linhas em que "data" não é "NA"
 
 extrato <- dplyr::mutate(extrato, 
                          conta = "ELO", 
@@ -33,7 +28,7 @@ extrato <- dplyr::mutate(extrato,
 )
 
 extrato <- dplyr::mutate(extrato,
-                         centro = "Sem classe",
+                         centro = "Sem Classe",
                          .after = "categoria"
 )
 
@@ -47,7 +42,14 @@ extrato <- dplyr::mutate(extrato,
                          .after = "IRPF"
 )
 
-extrato$categoria <- ifelse(grepl(" ", extrato$descricao, ignore.case = TRUE), "Sem Classe", extrato$categoria)
+extrato <- dplyr::filter(extrato, 
+                         extrato$descricao != "SALDO ANTERIOR")
+
+extrato$valor <- as.double(gsub(",", ".", extrato$valor))
+
+extrato <- dplyr::filter(extrato, 
+                         extrato$valor > 0)
+
 extrato$categoria <- ifelse(grepl(" ", extrato$descricao, ignore.case = TRUE), "Sem Classe", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estaciona", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estac m", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
@@ -94,6 +96,7 @@ extrato$categoria <- ifelse(grepl("farmaci", extrato$descricao, ignore.case = TR
 extrato$categoria <- ifelse(grepl("drogar", extrato$descricao, ignore.case = TRUE), "Remédios", extrato$categoria)
 extrato$categoria <- ifelse(grepl("drogasil", extrato$descricao, ignore.case = TRUE), "Remédios", extrato$categoria)
 extrato$categoria <- ifelse(grepl("paggue", extrato$descricao, ignore.case = TRUE), "Remédios", extrato$categoria)
+extrato$categoria <- ifelse(grepl("pague menos", extrato$descricao, ignore.case = TRUE), "Remédios", extrato$categoria)
 extrato$categoria <- ifelse(grepl("Andre Luiz Barreto Cunha", extrato$descricao, ignore.case = TRUE), "Consultas Médicas", extrato$categoria)
 extrato$categoria <- ifelse(grepl("Carla Monick", extrato$descricao, ignore.case = TRUE), "Doações", extrato$categoria)
 extrato$categoria <- ifelse(grepl("gelato", extrato$descricao, ignore.case = TRUE), "Sorveterias", extrato$categoria)
@@ -174,6 +177,7 @@ extrato$categoria <- ifelse(grepl("99", extrato$descricao, ignore.case = TRUE), 
 extrato$categoria <- ifelse(grepl("shellbox", extrato$descricao, ignore.case = TRUE), "Combustível", extrato$categoria)
 extrato$categoria <- ifelse(grepl("posto", extrato$descricao, ignore.case = TRUE), "Combustível", extrato$categoria)
 extrato$categoria <- ifelse(grepl("cinema", extrato$descricao, ignore.case = TRUE), "Cinema", extrato$categoria)
+extrato$categoria <- ifelse(grepl("NEY SOM", extrato$descricao, ignore.case = TRUE), "Instrumentos Musicais", extrato$categoria)
 
 extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustível", "Manutenção Carro", "Lavagem", "Licenciamento Anual", "Seguro"),
                          "Carro",
@@ -240,20 +244,11 @@ extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustíve
 
 extrato$IRPF <- ifelse(extrato$categoria %in% c("Fisioterapeutas", "Consultas Médicas", "Exames", "Psicólogos", "Plano de Saúde", "Dentistas", "Previdência Privada", "Doutorado Fernanda", "Escola Amélie", "Imposto de Renda", "Investimentos"), "SIM", extrato$IRPF)
 
-extrato <- extrato[!is.na(extrato$data),] # Filtra linhas em que "data" não é "NA"
-extrato <- extrato[extrato$descricao != "SALDO ANTERIOR",] #Filtrar linhas em que "descricao" é diferente de "SALDO ANTERIOR":
-extrato <- extrato |> 
-  mutate(valor = as.numeric(str_replace_all(valor, ",", ".")),
-         valor = -valor, # ajusta o sinal das transações financeiras
-         data = if_else(month(data) > 6, as.Date(paste0("2022-", month(data), "-", day(data))), data),
-         data = format(data, "%d/%m/%Y")
-  )
+nome_arquivo <- paste0(ano_mes, ".despesas.ELO.xlsx")
 
-extrato <- dplyr::filter(extrato, 
-                         extrato$valor < 0)
+caminho_arquivo <- file.path("data", nome_arquivo)
 
-extrato <- extrato |>
-  dplyr::mutate(valor = valor * -1)
+writexl::write_xlsx(extrato, caminho_arquivo)
 
-write_xlsx(extrato, path = file.choose())
+}
 
