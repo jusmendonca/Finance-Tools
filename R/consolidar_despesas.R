@@ -9,10 +9,7 @@
 #'
 #' @examples
 consolidar_despesas <- function(...){
-  
   df <- dplyr::bind_rows(list(...))
-  
-  df <- tibble::as_tibble(df)
-
+    df <- tibble::as_tibble(df)
 }
 

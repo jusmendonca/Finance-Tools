@@ -258,6 +258,5 @@ extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustíve
 extrato$IRPF <- ifelse(extrato$categoria %in% c("Fisioterapeutas", "Consultas Médicas", "Exames", "Psicólogos", "Plano de Saúde", "Dentistas", "Previdência Privada", "Doutorado Fernanda", "Escola Amélie", "Imposto de Renda", "Investimentos", "Prestação Casa"), "SIM", extrato$IRPF)
 
 df <- tibble::as_tibble(extrato)
-
 }
 
