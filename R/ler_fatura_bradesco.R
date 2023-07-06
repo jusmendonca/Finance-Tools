@@ -1,13 +1,12 @@
-
-#' Lê despesas da fatura Bradesco em .xls e retorna tibble
-#'
+#' Title
+#'Lê fatura de cartão de crédito Bradesco
 #' @param origem 
 #'
 #' @return tibble
-#' @export 
+#' @export
 #'
 #' @examples
-ler_fatura_bradesco <- function(origem, ano_mes){
+ler_fatura_bradesco <- function(origem){
 
 extrato <- readxl::read_xls(origem)
 

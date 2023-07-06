@@ -1,10 +1,9 @@
-
-#' Lê despesas do extrato Bradesco em .xls e retorna tibble
-#'
+#' Title
+#'Lê extrato da conta-corrente do Bradesco em .xls
 #' @param origem 
 #'
 #' @return tibble
-#' @export 
+#' @export
 #'
 #' @examples
 ler_conta_bradesco <- function(origem){

@@ -1,10 +1,10 @@
-#' Organiza despesas do extrato Banco do Brasil em .csv e gera planilha .xlsx.
-#'
+#' Title
+#' Organiza despesas do extrato .csv do Banco do Brasil e exporta uma planilha .xlsx
 #' @param origem 
 #' @param ano_mes 
 #'
 #' @return
-#' @export .xls
+#' @export .xlsx
 #'
 #' @examples
 organizar_extrato_despesas_csv <- function(origem, ano_mes){

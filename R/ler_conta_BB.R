@@ -1,9 +1,9 @@
-#' Lê extrato .csv Banco do Brasil e transforma e dataframe
+#' Title
+#'Lê extrato da conta-corrente do Banco do Brasil
+#' @param origem 
 #'
-#' @param origem
-#'
-#' @return
-#' @export 
+#' @return tibble
+#' @export
 #'
 #' @examples
 ler_conta_BB <- function(origem){

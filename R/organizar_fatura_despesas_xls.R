@@ -1,11 +1,10 @@
-
-#' Organiza despesas da fatura Bradesco em .xls e gera planilha .xlsx.
-#'
+#' Title
+#' Organiza despesas da fatura do cartão de crédito do Bradesco em .xls e exporta uma planilha .xlsx
 #' @param origem 
 #' @param ano_mes 
 #'
 #' @return
-#' @export despesas
+#' @export .xlsx
 #'
 #' @examples
 organizar_fatura_despesas_xls <- function(origem, ano_mes){
@@ -26,7 +25,7 @@ extrato$data <- sub("(\\d{2})(\\d{2})", "\\1/\\2", extrato$data)
 
 extrato$data <- as.Date(extrato$data, format = "%d/%m")
 
-extrato <- extrato[!is.na(extrato$data),] # Filtra linhas em que "data" não é "NA"
+extrato <- extrato[!is.na(extrato$data),]
 
 extrato <- dplyr::mutate(extrato, 
                          conta = "ELO", 
