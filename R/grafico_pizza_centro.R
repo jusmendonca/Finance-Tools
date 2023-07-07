@@ -2,7 +2,7 @@
 #' Cria gráfico de pizza centro x valor
 #' @param df 
 #'
-#' @return
+#' @return grafico de pizza
 #' @export
 #'
 #' @examples
@@ -11,7 +11,7 @@ grafico_pizza_centro <- function(df){
 resumo <- aggregate(valor ~ centro, data = df, FUN = sum)
 
 # Definir uma paleta de cores personalizada
-cores <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666", "#E41A1C", "#377E90", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628", "#F781BF")
+cores <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#FDD10A", "#A6761D", "#9594a4", "#E41A1C", "#2b818c", "#4DAF4A", "#990069", "#FF7F00", "#FFFF33", "#070707", "#F781BF")
 
 # Criar o gráfico de pizza com a paleta de cores personalizada
 grafico <- ggplot2::ggplot(resumo, aes(x = "", y = valor, fill = centro)) +
@@ -25,6 +25,3 @@ grafico <- ggplot2::ggplot(resumo, aes(x = "", y = valor, fill = centro)) +
 # Exibir o gráfico
 print(grafico)
 }
-
-
-
