@@ -1,0 +1,23 @@
+---
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+
+resumo <- aggregate(valor ~ centro, data = dff, FUN = sum)
+
+# Definir uma paleta de cores personalizada
+cores <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#FDD10A", "#A6761D", "#9594a4", "#E41A1C", "#2b818c", "#4DAF4A", "#990069", "#FF7F00", "#FFFF33", "#070707", "#F781BF")
+
+# Criar o gráfico de pizza com a paleta de cores personalizada
+grafico <- ggplot2::ggplot(resumo, aes(x = "", y = valor, fill = centro)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(fill = "Centro de custos", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "right") +
+  scale_fill_manual(values = cores)
+# Renderizar o gráfico
+print(grafico)
+```

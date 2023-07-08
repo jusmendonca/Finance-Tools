@@ -1,3 +1,11 @@
+---
+title: "relatorio mes"
+format: html
+editor: visual
+---
+
+```{r}
+#| echo: false
 #' Title
 #'Lê extrato da conta-corrente do Banco do Brasil
 #' @param origem 
@@ -34,7 +42,7 @@ extrato <- dplyr::mutate(extrato,
 )
 
 extrato <- dplyr::mutate(extrato,
-                         centro = "Sem Classe",
+                         centro = "Sem classe",
                          .after = "categoria"
                          )
 
@@ -283,3 +291,39 @@ extrato <- dplyr::select(extrato,
 df <- tibble::as_tibble(extrato)
 
 }
+```
+
+Cria df:
+
+```{r}
+#| echo: false
+df1 <- ler_conta_BB("data-raw/bb_janeiro.csv")
+```
+
+Exibe df:
+
+```{r}
+#| echo: false
+View(df1)
+```
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

@@ -1,0 +1,97 @@
+---
+title: "Relatório de despesas"
+author: "Igor"
+date: "2023-07-07"
+output: html_document
+---
+
+```{r, echo=FALSE}
+ano_mes
+```
+
+
+```{r, echo=FALSE}
+library(dplyr)
+library(kableExtra)
+
+# Calcular as despesas por centro
+despesas_centro <- aggregate(valor ~ centro, data = dff, FUN = sum)
+
+# Calcular o total das despesas
+total <- sum(despesas_centro$valor)
+
+# Criar uma linha com o total
+total_row <- data.frame(centro = "TOTAL", valor = total)
+
+# Adicionar a linha total ao data frame
+despesas_centro <- bind_rows(despesas_centro, total_row)
+
+# Calcular os percentuais relativos
+despesas_centro$percentual <- despesas_centro$valor / total * 100
+
+# Arredondar os percentuais para duas casas decimais
+despesas_centro$percentual <- round(despesas_centro$percentual, 2)
+
+# Renderizar a tabela usando kableExtra
+kable(despesas_centro, format = "html", table.attr = "class='table'", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### 1.2 Resumo das despesas por categoria
+
+```{r, echo=FALSE}
+despesas_categoria <- aggregate(valor ~ categoria, data = dff, FUN = sum)
+
+total <- sum(despesas_categoria$valor)
+
+total_row <- data.frame(categoria = "TOTAL", valor = total)
+
+despesas_categoria <- dplyr::bind_rows(despesas_categoria, total_row)
+
+kableExtra::kable(despesas_categoria, format = "html", table.attr = "class='table'", row.names = FALSE) |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### 1.3 Gráficos
+
+**Despesas por centro de custos**
+
+```{r, child='template-grafico.Rmd', echo=FALSE}
+```
+
+**Despesas por categoria**
+
+```{r, child='template-grafico-categoria.Rmd', echo=FALSE}
+```
+
+## 2. Despesas com impacto no IRPF
+
+**Atenção**: arquivar recibos e notas fiscais *mensalmente*.
+
+```{r, echo=FALSE}
+
+despesas_irpf <- dplyr::filter(dff, dff$IRPF == "SIM")
+
+total <- sum(despesas_irpf$valor)
+
+total_row <- data.frame(etiqueta = "TOTAL", valor = total)
+
+despesas_irpf <- dplyr::bind_rows(despesas_irpf, total_row)
+
+kableExtra::kable(despesas_irpf, format = "html", table.attr = "class='table'", row.names = FALSE) |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## 3. Extrato das despesas
+
+```{r, results='asis', echo=FALSE}
+
+total <- sum(dff$valor)
+
+total_row <- data.frame(etiqueta = "TOTAL", valor = total)
+
+dff <- dplyr::bind_rows(dff, total_row)
+
+kableExtra::kable(dff, format = "html", table.attr = "class='table'", row.names = FALSE) |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```

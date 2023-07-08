@@ -62,7 +62,7 @@ extrato <- dplyr::mutate(extrato,
                          etiqueta = "Sem Classe",
                          .after = "IRPF"
 )
-extrato$categoria <- "Sem Classe"
+extrato$categoria <- ifelse(grepl(" ", extrato$descricao, ignore.case = TRUE), "Sem Classe", extrato$categoria)
 extrato$categoria <- ifelse(grepl("prest fin", extrato$descricao, ignore.case = TRUE), "Prestação Casa", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estaciona", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
 extrato$categoria <- ifelse(grepl("estac m", extrato$descricao, ignore.case = TRUE), "Estacionamento", extrato$categoria)
@@ -258,5 +258,6 @@ extrato$centro <- ifelse(extrato$categoria %in% c("Estacionamento", "Combustíve
 extrato$IRPF <- ifelse(extrato$categoria %in% c("Fisioterapeutas", "Consultas Médicas", "Exames", "Psicólogos", "Plano de Saúde", "Dentistas", "Previdência Privada", "Doutorado Fernanda", "Escola Amélie", "Imposto de Renda", "Investimentos", "Prestação Casa"), "SIM", extrato$IRPF)
 
 df <- tibble::as_tibble(extrato)
+
 }
 
