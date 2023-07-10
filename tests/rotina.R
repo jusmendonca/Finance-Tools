@@ -1,23 +1,9 @@
-ano_mes <- "2023 JANEIRO"
+ler_extratoBB_csv("tests/extrato_bb_junho.csv")
 
-install.packages("kableExtra")
-library("financetools")
-df1 <- ler_conta_BB("data-raw/bb_janeiro.csv")
-df2 <- ler_conta_bradesco("data-raw/bradesco_janeiro.xls")
-df3 <- ler_fatura_bradesco("data-raw/cartao_janeiro.xls")
-dff <- consolidar_despesas(df1, df2, df3)
-library(ggplot2)
-# Gerar relatório
-dff <- data.frame(dff)
-my_env <- new.env()
-my_env$dff <- dff
-rmarkdown::render('Rmd/template-relatorio.Rmd', envir = my_env)
+ler_extratoBradesco_xls("tests/extrato_bradesco_junho.xls")
 
+ler_faturaBradesco_xls("tests/fatura_bradesco_junho.xls")
 
-# totalizar
+consolidar_lancamentos(fatura_bradesco, extrato_Bradesco, extrato_BB)
 
-total <- sum(extrato$valor)
-
-total_row <- data.frame(etiqueta = "TOTAL", valor = total)
-
-df <- dplyr::bind_rows(extrato, total_row)
+classificar_lancamentos()
